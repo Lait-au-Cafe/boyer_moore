@@ -7,7 +7,6 @@ use std::fs::File;
 use std::io::BufReader;
 use std::io::BufRead;
 use std::cmp::max;
-use std::iter;
 //use std::collections::HashMap;
 //use num::pow;
 
@@ -32,7 +31,7 @@ fn boyer_moore(text: &[u8], patt_list: &[&[u8]]) -> Result<Vec<Vec<i32>>, String
 
     // generate skip table and next table
     let mut skip_table: Vec<[usize; 256]> = Vec::new();
-    let mut next_table: Vec<Vec<usize>> = Vec::new(); 
+    let mut next_table: Vec<&[usize]> = Vec::new(); 
     for patt in patt_list {
         // skip table
         let mut tab: [usize; 256] = [m; 256];
@@ -42,64 +41,33 @@ fn boyer_moore(text: &[u8], patt_list: &[&[u8]]) -> Result<Vec<Vec<i32>>, String
         skip_table.push(tab);
 
         // next table
-        let mut tab = iter::repeat(0).take(m).collect::<Vec<usize>>();
-        for s in (0..m).rev() {
-            let mut disp = m-1;
-            let mut reached = true;
-            for j in (s+1..m).rev() {
-                disp = j;
-//                println!("j-s : {}, j : {}", j-s, j);
-                if patt[j-s-1] != patt[j] {
-                    reached = false;
-                    break;
-                }
-            }
-            if !reached {
-                tab[disp] = m-disp+s;
-            } else {
-                for k in 0..disp+1 {
-                    tab[k] = m-k+s;
-                }
-            }
-
-//            print!("{} : ", s);
-//            for i in 0..m {
-//                print!("{:>2}, ", tab[i]);
-//            }
-//            println!("");
+        let mut tab: Vec<usize> = Vec::new();
+        for j in 0..m {
+            tab.push(2*m-j-1);            
         }
-        next_table.push(tab);
+        let mut j = m;
     }
-
-//    for next in next_table.iter() {
-//        for val in next {
-//            print!("{}, ", val);
-//        }
-//        println!("");
-//    }
 
 
     for (k, patt) in patt_list.into_iter().enumerate() {
         let mut pos = m-1;
         let skip = skip_table[k];
-        let next = &next_table[k];
-        while pos < n {
-            let mut disp = 0;
-            let mut sub = 0;
+        'search: while pos < n {
+            let mut j = m-1;
             let mut found = true;
-            for j in 0..m {
-                disp = m-j-1;
-                // if matching failed
-                if text[pos-sub] != patt[disp] {
+            while j >= 0 {
+                if text[pos] == patt[j] {
+                    pos = pos-1;
+                    j = j-1;
+                } else { // matching failed
                     found = false;
                     break;
                 }
-                sub = sub+1;
             }
             if found {
-                result[k].push((pos+1-sub) as i32);
+                result[k].push((pos+1) as i32);
             }
-            pos = pos + max(skip[text[pos] as usize], next[disp]) - sub;
+            pos = pos + max(skip[text[pos] as usize], m-j);
         }
     }
 
