@@ -44,11 +44,11 @@ fn boyer_moore(text: &[u8], patt_list: &[&[u8]]) -> Result<Vec<Vec<i32>>, String
         // next table
         let mut tab = iter::repeat(0).take(m).collect::<Vec<usize>>();
         for s in (0..m).rev() {
-            let mut disp = m-1;
+            let mut disp = m;
             let mut reached = true;
             for j in (s+1..m).rev() {
                 disp = j;
-//                println!("j-s : {}, j : {}", j-s, j);
+//println!("j-s : {}, j : {}", j-s, j);
                 if patt[j-s-1] != patt[j] {
                     reached = false;
                     break;
@@ -57,26 +57,26 @@ fn boyer_moore(text: &[u8], patt_list: &[&[u8]]) -> Result<Vec<Vec<i32>>, String
             if !reached {
                 tab[disp] = m-disp+s;
             } else {
-                for k in 0..disp+1 {
+                for k in 0..disp {
                     tab[k] = m-k+s;
                 }
             }
 
-//            print!("{} : ", s);
-//            for i in 0..m {
-//                print!("{:>2}, ", tab[i]);
-//            }
-//            println!("");
+//print!("{} : ", s);
+//for i in 0..m {
+//    print!("{:>2}, ", tab[i]);
+//}
+//println!("");
         }
         next_table.push(tab);
     }
 
-//    for next in next_table.iter() {
-//        for val in next {
-//            print!("{}, ", val);
-//        }
-//        println!("");
+//for next in next_table.iter() {
+//    for val in next {
+//        print!("{}, ", val);
 //    }
+//    println!("");
+//}
 
 
     for (k, patt) in patt_list.into_iter().enumerate() {
@@ -98,6 +98,7 @@ fn boyer_moore(text: &[u8], patt_list: &[&[u8]]) -> Result<Vec<Vec<i32>>, String
             }
             if found {
                 result[k].push((pos+1-sub) as i32);
+                pos = pos+1;
             }
             pos = pos + max(skip[text[pos] as usize], next[disp]) - sub;
         }
